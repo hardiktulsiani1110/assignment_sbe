@@ -13,5 +13,5 @@ admin_user_router = APIRouter(
 def create_user(
     payload: CreateUserPayload, user_service: UserService = Depends(get_user_service)
 ):
-    new_user = user_service.create_user(payload.email, payload.password)
+    new_user = user_service.create_user(payload.email, payload.password, payload.role)
     return new_user

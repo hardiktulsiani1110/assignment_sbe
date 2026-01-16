@@ -2,6 +2,7 @@
 from config import Config
 from db.database import SessionLocal
 from db.models.user import User
+from schema.user import UserRole
 from utils.auth import get_password_hash
 
 
@@ -14,7 +15,7 @@ def seed_admin():
             admin = User(
                 email=Config.ADMIN_EMAIL,
                 password=get_password_hash(Config.ADMIN_PASSWORD),
-                role="admin",
+                role=UserRole.ADMIN.value,
             )
             db.add(admin)
             db.commit()
