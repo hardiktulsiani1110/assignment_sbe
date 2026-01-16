@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import UUID, Column, String
+from sqlalchemy import UUID, CheckConstraint, Column, String
 
 from db.database import Base
 
@@ -11,3 +11,5 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=False)
     role = Column(String, default="member", nullable=False)
+
+    __table_args__ = (CheckConstraint("role IN ('admin','member','manager')"),)
