@@ -1,4 +1,4 @@
-# Dependency to require authentication
+# Dependency to require admin authentication
 from fastapi import HTTPException, Request
 
 from schema.user import UserRole

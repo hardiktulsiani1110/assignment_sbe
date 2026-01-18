@@ -12,4 +12,3 @@ bearer_scheme = HTTPBearer()
 router.dependencies = [Depends(bearer_scheme), Depends(require_admin)]
 
 router.include_router(admin_user_router)
-# router.include_router(other_router)
