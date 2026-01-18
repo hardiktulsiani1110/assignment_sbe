@@ -1,3 +1,4 @@
+from typing import List
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -23,10 +24,20 @@ class UserService:
         new_user = self.user_repo.create(email, hashed_password, role.value)
         return new_user
 
+    def get_all_users(self) -> List[User]:
+        users = self.user_repo.get_all_users()
+        return users
+
     def get_user_by_mail(self, email: str) -> User | None:
         user = self.user_repo.get_by_email(email)
         return user
 
-    def get_user_by_id(self, id: UUID) -> User | None:
-        user = self.user_repo.get_by_id(id)
+    def get_user_by_id(self, user_id: UUID) -> User | None:
+        user = self.user_repo.get_by_id(user_id)
         return user
+
+    def delete_user(self, user_id: UUID) -> None:
+        user = self.get_user_by_id(user_id)
+        if user is None:
+            raise HTTPException(404, detail="User Not found")
+        self.user_repo.delete(user)
