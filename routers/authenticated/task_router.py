@@ -3,9 +3,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.security import HTTPBearer
 
-from dependencies import get_task_service
+from dependencies import get_task_filter_service, get_task_service
 from middlewares.require_member import require_member
 from schema.task import UserUpdateTaskPayload
+from schema.task_filter import FilterRequest
+from services.task_filter_service import TaskFilterService
 from services.task_service import TaskService
 
 bearer_scheme = HTTPBearer()
@@ -43,3 +45,12 @@ def update_task(
     return task_service.user_update_task(
         task_id, UUID(request.state.user["id"]), update_data
     )
+
+
+@task_router.post("/filter", tags=["authenticated/tasks"])
+def filter_tasks(
+    payload: FilterRequest,
+    task_filter_service: TaskFilterService = Depends(get_task_filter_service),
+):
+    filtered_tasks = task_filter_service.search(payload.filters)
+    return filtered_tasks
