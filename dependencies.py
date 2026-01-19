@@ -5,6 +5,7 @@ from db.database import get_db
 from repositories.task_repository import TaskRepository
 from repositories.user_repository import UserRepository
 from services.auth_service import AuthService
+from services.task_dependency_service import TaskDependencyService
 from services.task_filter_service import TaskFilterService
 from services.task_service import TaskService
 from services.user_service import UserService
@@ -33,11 +34,18 @@ def get_auth_service(
     return AuthService(user_repo)
 
 
+def get_task_dependency_service() -> TaskDependencyService:
+    return TaskDependencyService()
+
+
 def get_task_service(
     task_repo: TaskRepository = Depends(get_task_repository),
     user_repo: UserRepository = Depends(get_user_repository),
+    task_dependency_service: TaskDependencyService = Depends(
+        get_task_dependency_service
+    ),
 ) -> TaskService:
-    return TaskService(task_repo, user_repo)
+    return TaskService(task_repo, user_repo, task_dependency_service)
 
 
 def get_task_filter_service(db: Session = Depends(get_db)) -> TaskFilterService:

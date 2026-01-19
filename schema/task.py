@@ -54,3 +54,7 @@ class RemoveCollaboratorsPayload(BaseModel):
 # User can only update status for now
 class UserUpdateTaskPayload(BaseModel):
     status: TaskStatus = None
+
+
+class AddDependencyPayload(BaseModel):
+    pre_task_id: UUID
