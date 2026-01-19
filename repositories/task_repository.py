@@ -39,11 +39,15 @@ class TaskRepository:
     def get_by_id(self, task_id: UUID) -> Task | None:
         return self.db.query(Task).filter(Task.id == task_id).first()
 
-    def get_by_id_with_collaborators(self, task_id: UUID) -> Task | None:
+    def get_by_id_with_collaborators_and_dependencies(
+        self, task_id: UUID
+    ) -> Task | None:
         return (
             self.db.query(Task)
             .filter(Task.id == task_id)
             .options(joinedload(Task.collaborators))
+            .options(joinedload(Task.depends_on_tasks))
+            .options(joinedload(Task.dependent_tasks))
             .first()
         )
 

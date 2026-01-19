@@ -26,6 +26,21 @@ task_collaborators = Table(
     ),
 )
 
+# creating a task dependency junction table (TaskA, TaskB), (TaskA, TaskC) etc.
+task_dependencies = Table(
+    "task_dependencies",
+    Base.metadata,
+    Column(
+        "task_id", UUID, ForeignKey("tasks.id", ondelete="CASCADE"), primary_key=True
+    ),
+    Column(
+        "depends_on_task_id",
+        UUID,
+        ForeignKey("tasks.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)
+
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -54,6 +69,20 @@ class Task(Base):
     )
     subtasks = relationship(
         "Task", foreign_keys=[parent_task_id], back_populates="parent_task"
+    )
+    depends_on_tasks = relationship(
+        "Task",
+        secondary=task_dependencies,
+        primaryjoin="Task.id == task_dependencies.c.task_id",
+        secondaryjoin="Task.id == task_dependencies.c.depends_on_task_id",
+        back_populates="dependent_tasks",
+    )
+    dependent_tasks = relationship(
+        "Task",
+        secondary=task_dependencies,
+        primaryjoin="Task.id == task_dependencies.c.depends_on_task_id",
+        secondaryjoin="Task.id == task_dependencies.c.task_id",
+        back_populates="depends_on_tasks",
     )
     collaborators = relationship(
         "User", secondary=task_collaborators, back_populates="collaborated_tasks"

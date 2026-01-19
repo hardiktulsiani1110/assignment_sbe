@@ -9,27 +9,34 @@ from repositories.task_repository import TaskRepository
 from repositories.user_repository import UserRepository
 from schema.task import TaskPriority, TaskStatus
 from schema.user import UserRole
+from services.task_dependency_service import TaskDependencyService
 
 
 class TaskService:
-    def __init__(self, task_repo: TaskRepository, user_repo: UserRepository):
+    def __init__(
+        self,
+        task_repo: TaskRepository,
+        user_repo: UserRepository,
+        task_dependency_service: TaskDependencyService,
+    ):
         self.task_repo = task_repo
         self.user_repo = user_repo
+        self.task_dependency_service = task_dependency_service
 
     def _verify_owner_and_get_task(
         self, task_id: UUID, owner_id: UUID
     ) -> Task:  # returning Task to avoid duplicate task fetching
         task = self.task_repo.get_by_id(task_id)
         if task is None:
-            raise HTTPException("Task not found")
+            raise HTTPException(400, "Task not found")
         if task.owner_id != owner_id:
-            raise HTTPException("You are not the real owner of the task")
+            raise HTTPException(400, "You are not the real owner of the task")
         return task
 
     def _verify_user_in_collaborator_and_get_task(
         self, user_id: UUID, task_id: UUID
     ) -> Task:  # returning Task to avoid duplicate task fetching
-        task = self.task_repo.get_by_id_with_collaborators(task_id)
+        task = self.task_repo.get_by_id_with_collaborators_and_dependencies(task_id)
 
         if task is None:
             raise HTTPException(404, "Task Doesn't exist")
@@ -42,7 +49,7 @@ class TaskService:
                 break
 
         if not user_is_collaborator:
-            raise HTTPException("User should be a collaborator to update task")
+            raise HTTPException(400, "User should be a collaborator to update task")
 
         return task
 
@@ -59,7 +66,7 @@ class TaskService:
         return self.task_repo.get_parent_tasks()
 
     def get_task_by_id(self, task_id: UUID) -> Task:
-        task = self.task_repo.get_by_id_with_collaborators(task_id)
+        task = self.task_repo.get_by_id_with_collaborators_and_dependencies(task_id)
         if not task:
             raise HTTPException(404, detail="Task not found")
         return task
@@ -89,6 +96,13 @@ class TaskService:
         task = self._verify_owner_and_get_task(task_id, owner_id)
 
         for key, value in update_data.items():
+            if key == "status":
+                pre_tasks = task.depends_on_tasks
+                for pre_task in pre_tasks:
+                    self.task_dependency_service.validate_post_task_status(
+                        pre_task, update_data["status"]
+                    )
+
             if key in ["priority", "status"]:
                 value = value.value
             setattr(task, key, value)
@@ -155,8 +169,27 @@ class TaskService:
         task = self._verify_user_in_collaborator_and_get_task(user_id, task_id)
 
         for key, value in update_data.items():
+            if key == "status":
+                pre_tasks = task.depends_on_tasks
+                for pre_task in pre_tasks:
+                    self.task_dependency_service.validate_post_task_status(
+                        pre_task, update_data["status"]
+                    )
             if key in ["status", "priority"]:
                 value = value.value
             setattr(task, key, value)
 
         self.task_repo.update(task)
+
+    def add_dependency(
+        self, pre_task_id: UUID, post_task_id: UUID, owner_id: UUID
+    ) -> None:
+        pre_task = self._verify_owner_and_get_task(pre_task_id, owner_id)
+        post_task = self._verify_owner_and_get_task(post_task_id, owner_id)
+
+        self.task_dependency_service.can_create_dependency(pre_task, post_task)
+
+        post_task.depends_on_tasks.append(pre_task)
+
+        self.task_repo.update(post_task)
+        return True

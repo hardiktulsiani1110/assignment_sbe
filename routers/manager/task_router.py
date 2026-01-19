@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from dependencies import get_task_service
 from schema.task import (
     AddCollaboratorsPayload,
+    AddDependencyPayload,
     BulkUpdateTaskPayload,
     CreateTaskPayload,
     UpdateTaskPayload,
@@ -130,3 +131,16 @@ def delete_task(
 ):
     task_service.delete_task(UUID(request.state.user["id"]), task_id)
     return JSONResponse(content={"message": "Task deleted successfully"})
+
+
+@manager_task_router.post("/{task_id}/blocked-by")
+def add_task_blocked_by(
+    request: Request,
+    task_id: UUID,
+    payload: AddDependencyPayload,
+    task_service: TaskService = Depends(get_task_service),
+):
+    task_service.add_dependency(
+        payload.pre_task_id, task_id, UUID(request.state.user["id"])
+    )
+    return JSONResponse(content={"message": "Task Dependency added successfully"})
