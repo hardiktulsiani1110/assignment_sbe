@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -15,6 +17,17 @@ Base = declarative_base()
 
 
 def get_db():
+    """For FastAPI routes with Depends()"""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@contextmanager
+def get_db_context():
+    """For use in middleware with `with` statement"""
     db = SessionLocal()
     try:
         yield db

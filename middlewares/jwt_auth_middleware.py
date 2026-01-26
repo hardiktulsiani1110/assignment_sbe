@@ -1,7 +1,7 @@
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from db.database import SessionLocal
+from db.database import get_db_context
 from db.models.user import User
 from utils.auth import decode_access_token
 
@@ -18,8 +18,7 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
 
             if payload:
                 user_id = payload.get("sub")
-                db = SessionLocal()
-                try:
+                with get_db_context() as db:
                     user = db.query(User).filter(User.id == user_id).first()
                     if user:
                         request.state.user = {
@@ -27,8 +26,6 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
                             "email": user.email,
                             "role": user.role,
                         }
-                finally:
-                    db.close()
 
         response = await call_next(request)
         return response

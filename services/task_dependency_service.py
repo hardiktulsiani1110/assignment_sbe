@@ -78,8 +78,9 @@ class TaskDependencyService:
 
         self._validate_status(pre_task, post_task)
 
-        self._check_cycle(pre_task, post_task)
-
+        if self._check_cycle(pre_task, post_task):
+            raise HTTPException(400, "Circular dependency detected")
+    
         return True
 
     def validate_post_task_status(

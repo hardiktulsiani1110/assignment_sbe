@@ -36,9 +36,7 @@ def get_all_tasks(
     include_subtasks: bool = Query(default=True),
     task_service: TaskService = Depends(get_task_service),
 ):
-    tasks = task_service.get_tasks_by_owner(
-        UUID(request.state.user["id"]), include_subtasks
-    )
+    tasks = task_service.get_all_tasks(include_subtasks)
     return tasks
 
 
