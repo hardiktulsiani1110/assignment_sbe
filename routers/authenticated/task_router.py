@@ -43,7 +43,7 @@ def update_task(
 ):
     update_data = payload.model_dump(exclude_unset=True)
     return task_service.user_update_task(
-        task_id, UUID(request.state.user["id"]), update_data
+     UUID(request.state.user["id"]), task_id, update_data
     )
 
 

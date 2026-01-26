@@ -102,16 +102,16 @@ class TaskRepository:
         return task_query.all()
 
     def get_by_collaborator(self, user_id: UUID) -> Task | None:
-        return self.db.query(Task).filter(Task.collaborators.any(User.id == user_id))
+        return self.db.query(Task).filter(Task.collaborators.any(User.id == user_id)).all()
 
     def add_collaborators(self, task: Task, users: User) -> None:
         for user in users:
             if user not in task.collaborators:
                 task.collaborators.append(user)
-                self.db.commit()
+        self.db.commit()
 
     def remove_collaborators(self, task: Task, users: User) -> None:
         for user in users:
             if user in task.collaborators:
                 task.collaborators.remove(user)
-                self.db.commit()
+        self.db.commit()

@@ -27,5 +27,10 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-def decode_access_token(token: str):
-    return jwt.decode(token, Config.SECRET_KEY, algorithms=[Config.ALGORITHM])
+def decode_access_token(token: str) -> dict | None:
+    try:
+        return jwt.decode(token, Config.SECRET_KEY, algorithms=[Config.ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
